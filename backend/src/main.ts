@@ -37,6 +37,8 @@ async function bootstrap() {
   // Configurar CORS com whitelist
   const allowedOrigins = [
     process.env.FRONTEND_URL,
+    'https://plannfly.com.br',
+    'https://www.plannfly.com.br',
     'http://localhost:3001',
   ].filter(Boolean);
 
