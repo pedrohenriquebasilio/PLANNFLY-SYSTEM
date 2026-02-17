@@ -140,7 +140,7 @@ export function Sidebar() {
             </svg>
           </div>
           <span className={cn(
-            "font-bold text-lg font-[family-name:var(--font-heading)] tracking-wider text-white transition-all duration-300 overflow-hidden whitespace-nowrap",
+            "font-bold text-lg font-[family-name:var(--font-heading)] tracking-wider text-sidebar-foreground transition-all duration-300 overflow-hidden whitespace-nowrap",
             isExpanded ? "w-auto opacity-100" : "w-0 opacity-0"
           )}>
             PLANNFLY
@@ -166,7 +166,7 @@ export function Sidebar() {
                       "flex items-center justify-center p-3 rounded-xl text-sm font-medium transition-all",
                       isActive
                         ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                        : "text-white/70 hover:bg-white/5 hover:text-white"
+                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
                     title={item.label}
                   >
@@ -185,7 +185,7 @@ export function Sidebar() {
                 <CollapsibleTrigger asChild>
                   <button className={cn(
                     "w-full flex items-center justify-between px-3 py-3 rounded-xl text-sm font-medium transition-colors mb-1",
-                    "text-white/70 hover:bg-white/5 hover:text-white"
+                    "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   )}>
                     <div className="flex items-center gap-3">
                       <item.icon className="w-5 h-5" />
@@ -200,7 +200,7 @@ export function Sidebar() {
                         "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all",
                         pathname === subItem.href
                           ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                          : "text-white/70 hover:bg-white/5 hover:text-white"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                       )}>
                         {subItem.label}
                     </Link>
@@ -219,7 +219,7 @@ export function Sidebar() {
                   isExpanded ? "justify-between px-3 py-3" : "justify-center p-3",
                   pathname === item.href
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                    : "text-white/70 hover:bg-white/5 hover:text-white"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
                 title={!isExpanded ? item.label : undefined}
               >
@@ -265,15 +265,15 @@ export function Sidebar() {
               className="w-8 h-8 rounded-full flex-shrink-0"
             />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
-              <User className="w-4 h-4 text-white/70" />
+            <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center flex-shrink-0">
+              <User className="w-4 h-4 text-sidebar-foreground/70" />
             </div>
           )}
           <div className={cn(
             "flex-1 min-w-0 transition-all duration-300 overflow-hidden",
             isExpanded ? "w-auto opacity-100" : "w-0 opacity-0"
           )}>
-            <p className="text-sm font-medium text-white/70 truncate">
+            <p className="text-sm font-medium text-sidebar-foreground/70 truncate">
               {session?.user?.name || "Professor"}
             </p>
           </div>

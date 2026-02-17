@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { api, isApiConfigured } from "@/app/lib/api";
 import type {
   DashboardData,
@@ -85,8 +85,16 @@ export function useDashboard(params?: DashboardQueryParams): UseDashboardResult 
     }
   }, [params?.studentId, params?.startDate, params?.endDate]);
 
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
-    fetchDashboard();
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchDashboard();
+    }, 400);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [fetchDashboard]);
 
   return {

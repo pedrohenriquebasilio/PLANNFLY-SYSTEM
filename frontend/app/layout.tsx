@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
         className={`${spaceGrotesk.variable} ${inter.variable} font-[family-name:var(--font-body)] antialiased`}
       >

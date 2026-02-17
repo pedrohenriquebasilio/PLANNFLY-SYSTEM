@@ -1,16 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DashboardLayout } from "@/app/components/layout/DashboardLayout";
 import { Card } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
-import { Switch } from "@/app/components/ui/switch";
 import {
   Clock,
   Plus,
   Trash2,
-  Save,
   Loader2,
   AlertCircle,
   Check,
@@ -34,8 +32,9 @@ export default function SchedulePage() {
   const [availableDays, setAvailableDays] = useState<string[]>(DEFAULT_SCHEDULE_CONFIG.availableDays);
   const [workingHours, setWorkingHours] = useState<TimeRange[]>(DEFAULT_SCHEDULE_CONFIG.workingHours);
   const [blockedSlots, setBlockedSlots] = useState<BlockedSlot[]>([]);
-  const [hasChanges, setHasChanges] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const isInitialized = useRef(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load config into form when fetched
   useEffect(() => {
@@ -43,23 +42,35 @@ export default function SchedulePage() {
       setAvailableDays(config.availableDays);
       setWorkingHours(config.workingHours || DEFAULT_SCHEDULE_CONFIG.workingHours);
       setBlockedSlots(config.blockedSlots || []);
+      isInitialized.current = true;
+    } else if (isNew) {
+      isInitialized.current = true;
     }
-  }, [config]);
+  }, [config, isNew]);
 
-  // Track changes
+  // Auto-save with 800ms debounce after any change
   useEffect(() => {
-    if (!config && !isNew) return;
+    if (!isInitialized.current) return;
 
-    const originalDays = config?.availableDays || DEFAULT_SCHEDULE_CONFIG.availableDays;
-    const originalHours = config?.workingHours || DEFAULT_SCHEDULE_CONFIG.workingHours;
-    const originalBlocked = config?.blockedSlots || [];
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      const data: CreateScheduleConfigDto = {
+        availableDays,
+        workingHours,
+        blockedSlots,
+        timezone: "America/Sao_Paulo",
+      };
+      const success = await save(data);
+      if (success) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 2000);
+      }
+    }, 800);
 
-    const daysChanged = JSON.stringify(availableDays.sort()) !== JSON.stringify([...originalDays].sort());
-    const hoursChanged = JSON.stringify(workingHours) !== JSON.stringify(originalHours);
-    const blockedChanged = JSON.stringify(blockedSlots) !== JSON.stringify(originalBlocked);
-
-    setHasChanges(daysChanged || hoursChanged || blockedChanged);
-  }, [availableDays, workingHours, blockedSlots, config, isNew]);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [availableDays, workingHours, blockedSlots]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Toggle day
   const toggleDay = (day: string) => {
@@ -105,23 +116,6 @@ export default function SchedulePage() {
     );
   };
 
-  // Save handler
-  const handleSave = async () => {
-    const data: CreateScheduleConfigDto = {
-      availableDays,
-      workingHours,
-      blockedSlots,
-      timezone: "America/Sao_Paulo",
-    };
-
-    const success = await save(data);
-    if (success) {
-      setHasChanges(false);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    }
-  };
-
   // Error state
   if (error && !isLoading) {
     return (
@@ -148,31 +142,19 @@ export default function SchedulePage() {
               Defina seus dias e horarios de atendimento
             </p>
           </div>
-          <Button
-            onClick={handleSave}
-            disabled={!hasChanges || isSaving}
-            className={cn(
-              "bg-gradient-primary hover:opacity-90 transition-opacity text-white shadow-lg shadow-primary/25 border-0",
-              saveSuccess && "bg-green-500"
-            )}
-          >
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             {isSaving ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Salvando...
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Salvando...</span>
               </>
             ) : saveSuccess ? (
               <>
-                <Check className="w-4 h-4 mr-2" />
-                Salvo!
+                <Check className="w-4 h-4 text-emerald-500" />
+                <span className="text-emerald-500">Salvo</span>
               </>
-            ) : (
-              <>
-                <Save className="w-4 h-4 mr-2" />
-                Salvar Alteracoes
-              </>
-            )}
-          </Button>
+            ) : null}
+          </div>
         </div>
 
         {isLoading ? (
