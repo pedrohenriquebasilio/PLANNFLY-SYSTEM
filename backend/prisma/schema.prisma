@@ -1,0 +1,193 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Usuário (Professor)
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  googleId           String?  @unique
+  subscriptionStatus    String    @default("inactive") // active, inactive
+  subscriptionExpiresAt DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  students       Student[]
+  plans          Plan[]
+  lessons        Lesson[]
+  payments       Payment[]
+  scheduleConfig ScheduleConfig?
+  refreshTokens  RefreshToken[]
+
+  @@map("users")
+}
+
+// Aluno
+model Student {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  phone     String
+  cpf       String
+  status    String   @default("active") // active, inactive
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studentPlans   StudentPlan[]
+  lessonStudents LessonStudent[]
+  payments       Payment[]
+
+  // CPF único por professor
+  @@unique([userId, cpf])
+  @@map("students")
+}
+
+// Plano
+model Plan {
+  id                      String   @id @default(uuid())
+  userId                  String
+  name                    String
+  frequency               Int      // Quantas vezes por semana (ex: 1, 2, 3)
+  value                   Decimal  @db.Decimal(10, 2)
+  durationMinutes         Int      @default(50) // Duração da aula em minutos
+  rescheduleMinHours      Int      // Antecedência mínima para remarcação em horas
+  periodType              String   // monthly, quarterly, semiannual, annual, etc.
+  daysOfWeek              String[] // Dias da semana [0-6] onde 0 = Domingo
+  isActive                Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relacionamentos
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studentPlans StudentPlan[]
+  lessons      Lesson[]
+  payments     Payment[]
+
+  @@map("plans")
+}
+
+// Relação muitos-para-muitos entre Aluno e Plano
+model StudentPlan {
+  id            String   @id @default(uuid())
+  studentId     String
+  planId        String
+  startDate     DateTime
+  endDate       DateTime?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relacionamentos
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  plan    Plan    @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, planId])
+  @@map("student_plans")
+}
+
+// Aula
+model Lesson {
+  id            String    @id @default(uuid())
+  userId        String
+  startDateTime DateTime
+  durationMinutes Int
+  status        String    @default("scheduled") // scheduled, completed, rescheduled, cancelled
+  observations  String?
+  originalStartDateTime DateTime? // Para aulas remarcadas - histórico
+  planId        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relacionamentos
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan         Plan?        @relation(fields: [planId], references: [id], onDelete: SetNull)
+  studentLessons LessonStudent[]
+
+  @@map("lessons")
+}
+
+// Relação muitos-para-muitos entre Aula e Aluno (suporta aulas em grupo)
+model LessonStudent {
+  id        String   @id @default(uuid())
+  lessonId  String
+  studentId String
+  createdAt DateTime @default(now())
+
+  // Relacionamentos
+  lesson  Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, studentId])
+  @@map("lesson_students")
+}
+
+// Pagamento
+model Payment {
+  id              String    @id @default(uuid())
+  userId          String
+  studentId       String
+  planId          String?
+  value           Decimal   @db.Decimal(10, 2)
+  dueDate         DateTime
+  paidDate        DateTime?
+  status          String    @default("pending") // pending, paid
+  referenceMonth  Int       // Mês de referência (1-12)
+  referenceYear   Int       // Ano de referência
+  observations    String?
+  gatewayTransactionId String?
+  installmentNumber Int?    // Número da parcela (ex: 1, 2, 3...)
+  totalInstallments Int?    // Total de parcelas (ex: 12)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relacionamentos
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  plan    Plan?   @relation(fields: [planId], references: [id], onDelete: SetNull)
+
+  @@map("payments")
+}
+
+// Configuração de Agenda
+model ScheduleConfig {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  availableDays String[] // Dias da semana disponíveis [0-6]
+  workingHours Json     // Array de intervalos: [{ start: "08:00", end: "12:00" }, { start: "14:00", end: "18:00" }]
+  blockedSlots Json?    // Array de bloqueios: [{ date: "2024-01-15", startTime: "10:00", endTime: "12:00" }]
+  timezone     String   @default("America/Sao_Paulo")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relacionamentos
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("schedule_configs")
+}
+
+// Refresh Token
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relacionamentos
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
