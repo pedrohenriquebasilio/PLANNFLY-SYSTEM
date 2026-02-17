@@ -1,0 +1,62 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: https://api.plannfly.com.br
+    container_name: plannfly-frontend
+    restart: unless-stopped
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.plannfly-frontend.rule=Host(`plannfly.com.br`) || Host(`www.plannfly.com.br`)"
+      - "traefik.http.routers.plannfly-frontend.entrypoints=websecure"
+      - "traefik.http.routers.plannfly-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.plannfly-frontend.loadbalancer.server.port=3000"
+    networks:
+      - web
+      - internal
+
+  backend:
+    build:
+      context: ./backend
+    container_name: plannfly-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.plannfly-backend.rule=Host(`api.plannfly.com.br`)"
+      - "traefik.http.routers.plannfly-backend.entrypoints=websecure"
+      - "traefik.http.routers.plannfly-backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.plannfly-backend.loadbalancer.server.port=3000"
+    networks:
+      - web
+      - internal
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: plannfly-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-plannfly}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-plannfly}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+networks:
+  web:
+    external: true
+  internal:
+    driver: bridge
+
+volumes:
+  postgres_data:
