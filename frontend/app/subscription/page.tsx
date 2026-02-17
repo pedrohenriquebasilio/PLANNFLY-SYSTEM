@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -65,6 +66,7 @@ function formatPhone(value: string): string {
 }
 
 export default function SubscriptionPage() {
+  const router = useRouter();
   const [step, setStep] = useState<Step>("plans");
   const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(null);
   const [cpf, setCpf] = useState("");
@@ -129,6 +131,16 @@ export default function SubscriptionPage() {
       <div className="w-full max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-500">
         {step === "plans" && (
           <>
+            <div className="mb-6">
+              <button
+                onClick={() => router.push("/home")}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Voltar para o inicio
+              </button>
+            </div>
+
             <div className="flex flex-col items-center text-center space-y-6 mb-8">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
                 <CreditCard className="w-8 h-8 text-primary" />

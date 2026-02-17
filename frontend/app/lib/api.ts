@@ -1,4 +1,4 @@
-import { getSession } from "next-auth/react";
+import { getSession, signOut } from "next-auth/react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const API_TIMEOUT = Number(process.env.NEXT_PUBLIC_API_TIMEOUT) || 10000;
@@ -115,6 +115,13 @@ async function fetchWithTimeout(
   }
 }
 
+// Handle 401 - clear session and redirect to login
+function handleUnauthorized(): void {
+  if (typeof window === 'undefined') return;
+  invalidateTokenCache();
+  signOut({ callbackUrl: '/login' });
+}
+
 // Handle 402 - redirect to subscription page to choose a plan
 function handlePaymentRequired(): void {
   if (typeof window === 'undefined') return;
@@ -132,12 +139,14 @@ async function parseResponse<T>(response: Response): Promise<ApiResponse<T>> {
     data = (await response.text()) as unknown as T;
   }
 
+  if (response.status === 401) {
+    handleUnauthorized();
+    throw new ApiException('Sessão expirada', 401);
+  }
+
   if (response.status === 402) {
     handlePaymentRequired();
-    throw new ApiException(
-      'Assinatura necessária',
-      402,
-    );
+    throw new ApiException('Assinatura necessária', 402);
   }
 
   if (!response.ok) {
