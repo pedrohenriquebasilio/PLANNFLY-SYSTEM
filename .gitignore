@@ -1,0 +1,36 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+**/node_modules/
+
+# Build outputs
+**/dist/
+**/.next/
+**/build/
+**/out/
+
+# Logs
+**/*.log
+**/npm-debug.log*
+
+# OS
+.DS_Store
+**/.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.sublime-workspace
+
+# Claude Code internals
+.claude/
+
+# Other projects in this directory
+Intelligent-Assistant/
+
+# Misc
+*.tsbuildinfo
+**/.vercel
