@@ -19,6 +19,29 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
 
+  // CORS deve ser configurado antes de qualquer outro middleware
+  const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'https://plannfly.com.br',
+    'https://www.plannfly.com.br',
+    'http://localhost:3001',
+  ].filter(Boolean);
+
+  app.enableCors({
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`⚠️ CORS bloqueou origem: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Refresh-Token'],
+  });
+
   // Helmet - Headers de segurança
   app.use(
     helmet({
@@ -33,31 +56,6 @@ async function bootstrap() {
       crossOriginEmbedderPolicy: false, // Necessário para Swagger UI
     }),
   );
-
-  // Configurar CORS com whitelist
-  const allowedOrigins = [
-    process.env.FRONTEND_URL,
-    'https://plannfly.com.br',
-    'https://www.plannfly.com.br',
-    'http://localhost:3001',
-  ].filter(Boolean);
-
-  app.enableCors({
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-      // Permitir requisições sem origin (mobile apps, Postman, curl)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.warn(`⚠️ CORS bloqueou origem: ${origin}`);
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Refresh-Token'],
-  });
 
   // Cookie parser para refresh tokens
   app.use(cookieParser());
