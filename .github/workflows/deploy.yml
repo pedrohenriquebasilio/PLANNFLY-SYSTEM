@@ -26,6 +26,6 @@ jobs:
               git clean -fd
             fi
 
-            docker compose down || true
-            docker compose up -d --build
+            docker-compose down || true
+            docker-compose up -d --build
             docker image prune -f
