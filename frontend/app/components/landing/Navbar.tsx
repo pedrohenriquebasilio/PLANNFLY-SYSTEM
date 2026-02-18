@@ -31,7 +31,7 @@ export function Navbar() {
         href="/login"
         className="bg-foreground text-background px-5 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
       >
-        Get Started
+        Entrar
       </Link>
     </nav>
   );

@@ -37,7 +37,7 @@ export function Hero() {
                     className="bg-primary hover:bg-secondary text-white text-lg px-8 py-8 rounded-2xl shimmer-bg relative overflow-hidden group transition-all duration-300 transform hover:scale-105 shadow-xl shadow-primary/20"
                   >
                     <span className="relative z-10 flex items-center gap-2">
-                      Falar com um representante
+                      Começar
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </span>
                   </Button>
