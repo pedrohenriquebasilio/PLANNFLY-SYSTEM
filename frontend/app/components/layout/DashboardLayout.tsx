@@ -26,7 +26,7 @@ function DashboardContent({ children, title, breadcrumb, className }: DashboardL
   }, []);
 
   return (
-    <div className="min-h-screen bg-background font-sans flex">
+    <div className="dark min-h-screen bg-background font-sans flex">
       <Sidebar />
       <div className={cn(
         "flex-1 flex flex-col min-h-screen transition-all duration-300",
